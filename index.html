@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Walkie Talkie - Definitivo</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .walkie {
+            background: #2c2c3e;
+            border-radius: 40px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin: 0 0 5px;
+            font-size: 1.6rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #2ed573;
+            font-size: 0.7rem;
+            margin-bottom: 20px;
+        }
+
+        .user-panel {
+            background: #1e1e2a;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0f;
+            border: 1px solid #3a3a4a;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .save-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+            background: #ff6b6b;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+        }
+
+        .users-list {
+            background: #0a0a0f;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .users-title {
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .user-item {
+            padding: 10px 12px;
+            background: #1e1e2a;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .user-status {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        .user-status.listening {
+            background: #2ed57322;
+            color: #2ed573;
+        }
+
+        .user-status.speaking {
+            background: #ff475722;
+            color: #ff4757;
+            animation: pulseText 1s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .ptt-area {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .ptt-button {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b);
+            border: 4px solid #ecf0f1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            transition: 0.05s linear;
+        }
+
+        .ptt-button:active {
+            transform: scale(0.96);
+        }
+
+        .ptt-button.listening {
+            background: radial-gradient(circle at 30% 30%, #34495e, #2c3e50);
+        }
+
+        .current-status {
+            background: #000000aa;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .current-status-label {
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .current-status-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .current-status-value.listening {
+            color: #2ed573;
+        }
+
+        .current-status-value.speaking {
+            color: #ff4757;
+        }
+
+        .led {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        .led.listening {
+            background: #2ed573;
+            box-shadow: 0 0 5px #2ed573;
+        }
+
+        .led.speaking {
+            background: #ff4757;
+            box-shadow: 0 0 10px #ff4757;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .info-text {
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .no-users {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .sync-status {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .sync-status.success {
+            background: #2ed57322;
+            color: #2ed573;
+        }
+
+        .sync-status.error {
+            background: #ff475722;
+            color: #ff4757;
+        }
+
+        .sync-status.waiting {
+            background: #ffa50222;
+            color: #ffa502;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="walkie">
+        <h1>📻 WALKIE TALKIE</h1>
+        <div class="subtitle">Listo para usar</div>
+
+        <div class="user-panel">
+            <div class="input-group">
+                <label>👤 TU NOMBRE</label>
+                <input type="text" id="username" placeholder="Ej: Carlos, Ana, Luis..." maxlength="20">
+            </div>
+            <button id="saveNameBtn" class="save-btn">✅ GUARDAR NOMBRE</button>
+            <div class="sync-status waiting" id="syncStatus">
+                📡 Esperando nombre...
+            </div>
+        </div>
+
+        <div class="users-list">
+            <div class="users-title">
+                <span>👥 USUARIOS CONECTADOS</span>
+                <span id="userCount">0</span>
+            </div>
+            <div id="usersList">
+                <div class="no-users">Esperando usuarios...</div>
+            </div>
+        </div>
+
+        <div class="ptt-area">
+            <div id="pttButton" class="ptt-button listening">
+                🎧<br>ESCUCHANDO
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 10px; color: #aaa;">
+                Mantén presionado para HABLAR
+            </div>
+        </div>
+
+        <div class="current-status">
+            <div class="current-status-label">ESTADO ACTUAL</div>
+            <div class="current-status-value listening" id="statusValue">
+                <span class="led listening"></span>ESCUCHANDO
+            </div>
+            <div id="activeSpeakerName" style="font-size: 0.8rem; margin-top: 5px; color: #ff4757; display: none;">
+                🎤 Alguien está hablando...
+            </div>
+        </div>
+
+        <div class="info-text">
+            💡 1. ESCRIBE tu nombre<br>
+            💡 2. Pulsa ✅ GUARDAR NOMBRE<br>
+            💡 3. Mantén el botón ROJO para HABLAR<br>
+            💡 4. Suelta para ESCUCHAR
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+    // ============================================
+    // 🔧 CONFIGURACIÓN DE GITHUB (CAMBIAR AQUÍ)
+    // ============================================
+    const GITHUB_OWNER = 'TU_USUARIO';           // ← Tu usuario de GitHub
+    const GITHUB_REPO = 'walkie';                // ← El nombre de tu repositorio
+    const ARCHIVO_USUARIOS = 'usuarios.json';
+    // ============================================
+    
+    // ============ LEER TOKEN DE URL O CACHÉ ============
+    let GITHUB_TOKEN = null;
+    
+    function obtenerToken() {
+        // Intentar leer de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenUrl = urlParams.get('token');
+        
+        if (tokenUrl && tokenUrl.startsWith('github_pat')) {
+            localStorage.setItem('github_token', tokenUrl);
+            return tokenUrl;
+        }
+        
+        // Intentar leer de la caché
+        const tokenCache = localStorage.getItem('github_token');
+        if (tokenCache && tokenCache.startsWith('github_pat')) {
+            return tokenCache;
+        }
+        
+        return null;
+    }
+    
+    GITHUB_TOKEN = obtenerToken();
+    
+    if (!GITHUB_TOKEN) {
+        // Si no hay token, lo pedimos con un prompt
+        GITHUB_TOKEN = prompt('🔑 Introduce el token de GitHub para el walkie:');
+        if (GITHUB_TOKEN && GITHUB_TOKEN.startsWith('github_pat')) {
+            localStorage.setItem('github_token', GITHUB_TOKEN);
+            document.getElementById('syncStatus').innerHTML = '✅ Token guardado';
+            document.getElementById('syncStatus').className = 'sync-status success';
+        } else {
+            document.getElementById('syncStatus').innerHTML = '❌ Token inválido';
+            document.getElementById('syncStatus').className = 'sync-status error';
+        }
+    } else {
+        document.getElementById('syncStatus').innerHTML = '✅ Token cargado';
+        document.getElementById('syncStatus').className = 'sync-status success';
+    }
+    
+    // ============ VARIABLES GLOBALES ============
+    let peer = null;
+    let myUsername = '';
+    let myPeerId = null;
+    let localStream = null;
+    let isSpeaking = false;
+    let currentCall = null;
+    let audioElement = null;
+    let currentSpeakerId = null;
+    let intervalo = null;
+    
+    // Elementos DOM
+    const usernameInput = document.getElementById('username');
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    const pttButton = document.getElementById('pttButton');
+    const usersListDiv = document.getElementById('usersList');
+    const userCountSpan = document.getElementById('userCount');
+    const statusValue = document.getElementById('statusValue');
+    const activeSpeakerName = document.getElementById('activeSpeakerName');
+    const syncStatus = document.getElementById('syncStatus');
+    
+    // ============ FUNCIONES DE GITHUB ============
+    async function leerUsuariosDeGitHub() {
+        if (!GITHUB_TOKEN) return {};
+        try {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${ARCHIVO_USUARIOS}`;
+            const respuesta = await fetch(url, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            
+            if (respuesta.status === 401) {
+                localStorage.removeItem('github_token');
+                alert('❌ Token inválido o revocado. Pega el token nuevo.');
+                return {};
+            }
+            
+            if (respuesta.status === 404) {
+                return {};
+            }
+            
+            const datos = await respuesta.json();
+            const contenido = JSON.parse(atob(datos.content));
+            return contenido;
+        } catch (error) {
+            console.error('Error al leer:', error);
+            return {};
+        }
+    }
+    
+    async function guardarUsuariosEnGitHub(usuarios) {
+        if (!GITHUB_TOKEN) return false;
+        const contenido = btoa(unescape(encodeURIComponent(JSON.stringify(usuarios, null, 2))));
+        
+        let sha = null;
+        try {
+            const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${ARCHIVO_USUARIOS}`;
+            const respuesta = await fetch(url, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (respuesta.ok) {
+                const datos = await respuesta.json();
+                sha = datos.sha;
+            }
+        } catch(e) {}
+        
+        const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${ARCHIVO_USUARIOS}`;
+        const body = {
+            message: 'Actualizar usuarios',
+            content: contenido,
+            sha: sha
+        };
+        
+        const respuesta = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+        
+        if (respuesta.status === 401) {
+            localStorage.removeItem('github_token');
+            alert('❌ Token inválido o revocado');
+            return false;
+        }
+        
+        return respuesta.ok;
+    }
+    
+    async function actualizarMiPresencia() {
+        if (!myPeerId || !myUsername) return null;
+        
+        const usuarios = await leerUsuariosDeGitHub();
+        usuarios[myPeerId] = {
+            nombre: myUsername,
+            peerId: myPeerId,
+            ultimaVez: Date.now(),
+            estaHablando: isSpeaking
+        };
+        
+        for (let id in usuarios) {
+            if (Date.now() - usuarios[id].ultimaVez > 30000) {
+                delete usuarios[id];
+            }
+        }
+        
+        const ok = await guardarUsuariosEnGitHub(usuarios);
+        if (ok) {
+            syncStatus.className = 'sync-status success';
+            syncStatus.innerHTML = '✅ Sincronizado';
+        }
+        
+        return usuarios;
+    }
+    
+    async function sincronizar() {
+        if (!myPeerId || !myUsername) return;
+        
+        const usuarios = await actualizarMiPresencia();
+        if (!usuarios) return;
+        
+        const otrosUsuarios = Object.values(usuarios).filter(u => u.peerId !== myPeerId);
+        userCountSpan.innerText = otrosUsuarios.length;
+        
+        if (otrosUsuarios.length === 0) {
+            usersListDiv.innerHTML = '<div class="no-users">No hay otros usuarios conectados</div>';
+        } else {
+            usersListDiv.innerHTML = otrosUsuarios.map(user => `
+                <div class="user-item">
+                    <span class="user-name">${user.nombre}</span>
+                    <div class="user-status ${user.estaHablando ? 'speaking' : 'listening'}">
+                        ${user.estaHablando ? '🔴 HABLANDO' : '🟢 ESCUCHANDO'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        const alguienHablando = otrosUsuarios.find(u => u.estaHablando);
+        if (alguienHablando && !isSpeaking && currentSpeakerId !== alguienHablando.peerId) {
+            if (currentCall) currentCall.close();
+            conectarCon(alguienHablando.peerId);
+            currentSpeakerId = alguienHablando.peerId;
+            activeSpeakerName.style.display = 'block';
+            activeSpeakerName.innerHTML = `🎤 ${alguienHablando.nombre} está hablando...`;
+        } else if (!alguienHablando && currentSpeakerId) {
+            activeSpeakerName.style.display = 'none';
+        }
+    }
+    
+    function conectarCon(peerId) {
+        if (!localStream) return;
+        const call = peer.call(peerId, localStream);
+        currentCall = call;
+        
+        call.on('stream', (remoteStream) => {
+            if (audioElement) audioElement.pause();
+            audioElement = new Audio();
+            audioElement.srcObject = remoteStream;
+            audioElement.autoplay = true;
+        });
+        
+        call.on('close', () => {
+            if (currentCall === call) currentCall = null;
+        });
+    }
+    
+    function initPeer() {
+        peer = new Peer({
+            host: '0.peerjs.com',
+            port: 443,
+            secure: true,
+            path: '/'
+        });
+        
+        peer.on('open', (id) => {
+            myPeerId = id;
+            console.log('Peer ID:', id);
+            
+            if (intervalo) clearInterval(intervalo);
+            intervalo = setInterval(sincronizar, 5000);
+        });
+        
+        peer.on('call', (call) => {
+            if (localStream) call.answer(localStream);
+        });
+        
+        peer.on('error', (err) => {
+            console.error('Peer error:', err);
+        });
+    }
+    
+    async function startSpeaking() {
+        if (isSpeaking) return;
+        
+        if (!localStream) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                alert('Necesitas permitir el micrófono');
+                return;
+            }
+        }
+        
+        isSpeaking = true;
+        pttButton.classList.remove('listening');
+        pttButton.innerHTML = '🎤<br>HABLANDO';
+        statusValue.classList.remove('listening');
+        statusValue.classList.add('speaking');
+        statusValue.innerHTML = '<span class="led speaking"></span>HABLANDO';
+        
+        if (currentCall) currentCall.close();
+        activeSpeakerName.style.display = 'none';
+        
+        await sincronizar();
+    }
+    
+    async function stopSpeaking() {
+        if (!isSpeaking) return;
+        
+        isSpeaking = false;
+        pttButton.classList.add('listening');
+        pttButton.innerHTML = '🎧<br>ESCUCHANDO';
+        statusValue.classList.add('listening');
+        statusValue.classList.remove('speaking');
+        statusValue.innerHTML = '<span class="led listening"></span>ESCUCHANDO';
+        
+        await sincronizar();
+    }
+    
+    async function guardarNombre() {
+        const nombre = usernameInput.value.trim();
+        if (!nombre) {
+            alert('Escribe un nombre primero');
+            return;
+        }
+        
+        myUsername = nombre;
+        syncStatus.innerHTML = '📡 Sincronizando...';
+        syncStatus.className = 'sync-status waiting';
+        
+        // Si aún no tenemos peerId, esperamos un poco
+        if (!myPeerId) {
+            const espera = setInterval(() => {
+                if (myPeerId) {
+                    clearInterval(espera);
+                    sincronizar();
+                }
+            }, 500);
+        } else {
+            await sincronizar();
+        }
+    }
+    
+    async function pedirMicrofono() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log('Micrófono listo');
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    }
+    
+    function attachEvents() {
+        saveNameBtn.addEventListener('click', guardarNombre);
+        
+        pttButton.addEventListener('mousedown', startSpeaking);
+        pttButton.addEventListener('mouseup', stopSpeaking);
+        pttButton.addEventListener('mouseleave', stopSpeaking);
+        
+        pttButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startSpeaking();
+        });
+        pttButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopSpeaking();
+        });
+    }
+    
+    function init() {
+        attachEvents();
+        pedirMicrofono();
+        initPeer();
+    }
+    
+    window.addEventListener('beforeunload', () => {
+        if (intervalo) clearInterval(intervalo);
+        if (localStream) localStream.getTracks().forEach(track => track.stop());
+        if (peer) peer.destroy();
+    });
+    
+    init();
+</script>
+</body>
+</html>
