@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Walkie Talkie - Corregido</title>
+    <style>
+        *{user-select:none;-webkit-tap-highlight-color:transparent}
+        body{margin:0;min-height:100vh;background:linear-gradient(135deg,#0a0a0f,#1a1a2e);font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;padding:20px}
+        .container{max-width:500px;width:100%}
+        .walkie{background:#2c2c3e;border-radius:40px;padding:25px;box-shadow:0 20px 40px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1)}
+        h1{text-align:center;color:#ff6b6b;margin:0 0 5px;font-size:1.6rem}
+        .subtitle{text-align:center;color:#2ed573;font-size:.7rem;margin-bottom:20px}
+        .panel{background:#1e1e2a;border-radius:20px;padding:15px;margin-bottom:20px}
+        input{width:100%;padding:12px;background:#0a0a0f;border:1px solid #3a3a4a;border-radius:12px;color:white;font-size:1rem;box-sizing:border-box;text-align:center}
+        button{width:100%;margin-top:10px;padding:12px;background:#ff6b6b;border:none;border-radius:12px;color:white;font-weight:bold;cursor:pointer}
+        .users-list{background:#0a0a0f;border-radius:15px;padding:10px;margin-bottom:15px;max-height:250px;overflow-y:auto}
+        .users-title{font-size:.8rem;color:#ff6b6b;margin-bottom:8px;display:flex;justify-content:space-between}
+        .user-item{padding:10px;background:#1e1e2a;margin-bottom:6px;border-radius:10px;display:flex;justify-content:space-between}
+        .user-name{font-weight:bold}
+        .status-badge{padding:2px 8px;border-radius:20px;font-size:.65rem}
+        .status-badge.online{background:#2ed57322;color:#2ed573}
+        .ptt-button{width:180px;height:180px;border-radius:50%;background:radial-gradient(#e74c3c,#c0392b);border:4px solid #ecf0f1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:1.2rem;font-weight:bold;color:white;margin:20px auto;transition:.05s linear}
+        .ptt-button:active{transform:scale(.96)}
+        .ptt-button.listening{background:radial-gradient(#34495e,#2c3e50)}
+        .status{background:#000000aa;border-radius:15px;padding:15px;text-align:center;margin-top:15px}
+        .status-value{font-size:1.2rem;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:10px}
+        .status-value.listening{color:#2ed573}
+        .status-value.speaking{color:#ff4757}
+        .led{width:12px;height:12px;border-radius:50%;animation:pulse 1s infinite}
+        .led.listening{background:#2ed573}
+        .led.speaking{background:#ff4757}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .info-text{font-size:.7rem;color:#888;text-align:center;margin-top:15px}
+        .no-users{text-align:center;color:#666;padding:20px}
+        .sync-status{font-size:.7rem;text-align:center;margin-top:10px;padding:5px;border-radius:10px}
+        .sync-status.success{background:#2ed57322;color:#2ed573}
+        .sync-status.error{background:#ff475722;color:#ff4757}
+        .sync-status.waiting{background:#ffa50222;color:#ffa502}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="walkie">
+        <h1>📞 WALKIE TALKIE</h1>
+        <div class="subtitle">Mantén el botón para hablar</div>
+
+        <div class="panel">
+            <input type="text" id="nombre" placeholder="Tu nombre">
+            <button id="guardar">✅ GUARDAR NOMBRE</button>
+            <div class="sync-status waiting" id="estado">📡 Conectando a PeerJS...</div>
+        </div>
+
+        <div class="users-list">
+            <div class="users-title"><span>👥 CONECTADOS</span><span id="total">0</span></div>
+            <div id="lista"><div class="no-users">Esperando usuarios...</div></div>
+        </div>
+
+        <div id="boton" class="ptt-button listening">🎧<br>ESCUCHANDO</div>
+
+        <div class="status">
+            <div class="status-value listening" id="miEstado">
+                <span class="led listening"></span>ESCUCHANDO
+            </div>
+            <div id="hablante" style="font-size:.8rem;margin-top:5px;color:#ff4757;display:none;"></div>
+        </div>
+        <div class="info-text">1. Pon tu nombre y GUARDAR<br>2. Abre otra pestaña con el mismo enlace<br>3. Pon otro nombre<br>4. ¡Se ven solos!<br>5. Mantén el botón rojo para hablar</div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+// ============ CAMBIA SOLO ESTO ============
+const GITHUB_OWNER = 'landrasystem-star';
+const GITHUB_REPO = 'walkie';
+// ==========================================
+
+// ============ LEER TOKEN DE LA URL ============
+let GITHUB_TOKEN = null;
+
+const urlToken = new URLSearchParams(window.location.search).get('token');
+if (urlToken && urlToken.startsWith('github_pat')) {
+    GITHUB_TOKEN = urlToken;
+    localStorage.setItem('github_token', urlToken);
+    document.getElementById('estado').innerHTML = '✅ Token cargado. Conectando...';
+    document.getElementById('estado').className = 'sync-status success';
+} else {
+    const cached = localStorage.getItem('github_token');
+    if (cached && cached.startsWith('github_pat')) {
+        GITHUB_TOKEN = cached;
+        document.getElementById('estado').innerHTML = '✅ Token desde caché. Conectando...';
+        document.getElementById('estado').className = 'sync-status success';
+    } else {
+        document.getElementById('estado').innerHTML = '❌ Token no encontrado. Usa ?token=...';
+        document.getElementById('estado').className = 'sync-status error';
+    }
+}
+
+let peer, miId = null, miNombre = null, miStream = null, hablando = false;
+let llamada = null, audio = null, escuchandoA = null;
+let intervalo = null;
+let esperandoNombre = false;
+
+// ============ PEERJS ============
+peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true });
+
+peer.on('open', (id) => {
+    miId = id;
+    document.getElementById('estado').innerHTML = '✅ Conectado. Pon tu nombre';
+    document.getElementById('estado').className = 'sync-status success';
+    
+    // Si hay un nombre pendiente de guardar, lo guardamos ahora
+    if (esperandoNombre && miNombre) {
+        sincronizar();
+    }
+});
+
+peer.on('call', (call) => {
+    if (miStream) call.answer(miStream);
+});
+
+peer.on('error', (err) => {
+    console.error('Peer error:', err);
+    document.getElementById('estado').innerHTML = '⚠️ Error de conexión';
+});
+
+// ============ FUNCIONES GITHUB ============
+async function leerUsuarios() {
+    if (!GITHUB_TOKEN) return {};
+    try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/usuarios.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        if (res.status === 404) return {};
+        if (!res.ok) return {};
+        const data = await res.json();
+        return JSON.parse(atob(data.content));
+    } catch(e) {
+        return {};
+    }
+}
+
+async function guardarUsuarios(usuarios) {
+    if (!GITHUB_TOKEN) return;
+    const contenido = btoa(unescape(encodeURIComponent(JSON.stringify(usuarios, null, 2))));
+    let sha = null;
+    try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/usuarios.json`, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+        if (res.ok) sha = (await res.json()).sha;
+    } catch(e) {}
+    
+    await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/usuarios.json`, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'update', content, sha })
+    });
+}
+
+// ============ SINCRONIZAR ============
+async function sincronizar() {
+    if (!miId || !miNombre) return;
+    
+    const usuarios = await leerUsuarios();
+    usuarios[miId] = {
+        nombre: miNombre,
+        id: miId,
+        ultima: Date.now(),
+        hablando: hablando
+    };
+    
+    // Limpiar usuarios viejos
+    for (let id in usuarios) {
+        if (Date.now() - usuarios[id].ultima > 30000) {
+            delete usuarios[id];
+        }
+    }
+    
+    await guardarUsuarios(usuarios);
+    
+    // Actualizar lista
+    const otros = Object.values(usuarios).filter(u => u.id !== miId);
+    document.getElementById('total').innerText = otros.length;
+    const listaDiv = document.getElementById('lista');
+    
+    if (otros.length === 0) {
+        listaDiv.innerHTML = '<div class="no-users">No hay otros usuarios conectados</div>';
+    } else {
+        listaDiv.innerHTML = otros.map(u => `
+            <div class="user-item">
+                <span class="user-name">${u.nombre}</span>
+                <span class="status-badge online">${u.hablando ? '🔴 HABLANDO' : '🟢 ESCUCHANDO'}</span>
+            </div>
+        `).join('');
+    }
+    
+    // Detectar si alguien está hablando
+    const hablante = otros.find(u => u.hablando === true);
+    if (hablante && !hablando && escuchandoA !== hablante.id) {
+        if (llamada) llamada.close();
+        if (miStream) {
+            const call = peer.call(hablante.id, miStream);
+            llamada = call;
+            escuchandoA = hablante.id;
+            call.on('stream', (stream) => {
+                if (audio) audio.pause();
+                audio = new Audio();
+                audio.srcObject = stream;
+                audio.autoplay = true;
+            });
+            document.getElementById('hablante').innerHTML = `🎤 ${hablante.nombre} está hablando...`;
+            document.getElementById('hablante').style.display = 'block';
+        }
+    } else if (!hablante && escuchandoA) {
+        document.getElementById('hablante').style.display = 'none';
+        escuchandoA = null;
+    }
+}
+
+// ============ PTT ============
+const boton = document.getElementById('boton');
+
+boton.onmousedown = async () => {
+    if (!miStream) {
+        try {
+            miStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } });
+        } catch(e) {
+            alert('Permite el micrófono');
+            return;
+        }
+    }
+    if (!miId || !miNombre) {
+        alert('Primero guarda tu nombre');
+        return;
+    }
+    hablando = true;
+    boton.classList.remove('listening');
+    boton.innerHTML = '🎤<br>HABLANDO';
+    document.getElementById('miEstado').classList.remove('listening');
+    document.getElementById('miEstado').classList.add('speaking');
+    document.getElementById('miEstado').innerHTML = '<span class="led speaking"></span>HABLANDO';
+    if (llamada) llamada.close();
+    document.getElementById('hablante').style.display = 'none';
+    await sincronizar();
+};
+
+boton.onmouseup = async () => {
+    if (!hablando) return;
+    hablando = false;
+    boton.classList.add('listening');
+    boton.innerHTML = '🎧<br>ESCUCHANDO';
+    document.getElementById('miEstado').classList.add('listening');
+    document.getElementById('miEstado').classList.remove('speaking');
+    document.getElementById('miEstado').innerHTML = '<span class="led listening"></span>ESCUCHANDO';
+    await sincronizar();
+};
+
+boton.ontouchstart = (e) => { e.preventDefault(); boton.onmousedown(); };
+boton.ontouchend = (e) => { e.preventDefault(); boton.onmouseup(); };
+
+// ============ GUARDAR NOMBRE ============
+document.getElementById('guardar').onclick = async () => {
+    const nombre = document.getElementById('nombre').value.trim();
+    if (!nombre) {
+        alert('Escribe un nombre');
+        return;
+    }
+    
+    miNombre = nombre;
+    
+    if (!miId) {
+        // Estamos esperando que PeerJS conecte
+        esperandoNombre = true;
+        document.getElementById('estado').innerHTML = '📡 Conectando a PeerJS...';
+        document.getElementById('estado').className = 'sync-status waiting';
+        return;
+    }
+    
+    document.getElementById('estado').innerHTML = '📡 Sincronizando...';
+    document.getElementById('estado').className = 'sync-status waiting';
+    await sincronizar();
+    document.getElementById('estado').innerHTML = '✅ Conectado';
+    document.getElementById('estado').className = 'sync-status success';
+    
+    // Iniciar sincronización periódica
+    if (intervalo) clearInterval(intervalo);
+    intervalo = setInterval(sincronizar, 5000);
+};
+
+// ============ INICIALIZAR MICRÓFONO ============
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => { miStream = stream; })
+    .catch(e => console.log('Sin micrófono:', e));
+
+// ============ LIMPIEZA ============
+window.addEventListener('beforeunload', () => {
+    if (intervalo) clearInterval(intervalo);
+    if (miStream) miStream.getTracks().forEach(t => t.stop());
+    if (peer) peer.destroy();
+});
+</script>
+</body>
+</html>
