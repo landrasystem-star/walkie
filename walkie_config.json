@@ -2,10 +2,6 @@
   "walkie1_id": "w1779399052520_j0b59if5",
   "walkie2_id": "w1779399052520_jnr4k6dd",
   "ocupado1": null,
-  "ocupado2": {
-    "peerId": "w1779399052520_jnr4k6dd",
-    "timestamp": 1779399086764,
-    "hablando": false
-  },
+  "ocupado2": null,
   "ultimoReset": 1779399052520
 }
