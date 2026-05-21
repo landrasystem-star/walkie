@@ -6,10 +6,6 @@
     "timestamp": 1779402101999,
     "hablando": true
   },
-  "ocupado2": {
-    "peerId": "w1779399052520_jnr4k6dd",
-    "timestamp": 1779402393353,
-    "hablando": false
-  },
+  "ocupado2": null,
   "ultimoReset": 1779399052520
 }
