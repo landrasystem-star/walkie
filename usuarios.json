@@ -4,5 +4,11 @@
     "peerId": "5ff88942-0909-4de9-957b-c81ab8d360fb",
     "ultimaVez": 1779353829136,
     "estaHablando": false
+  },
+  "e72b8ad0-f722-4c19-8d15-9b8f7a2d8ffc": {
+    "nombre": "mon",
+    "id": "e72b8ad0-f722-4c19-8d15-9b8f7a2d8ffc",
+    "ultima": 1779361205018,
+    "hablando": false
   }
 }
