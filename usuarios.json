@@ -5,16 +5,10 @@
     "ultimaVez": 1779353829136,
     "estaHablando": false
   },
-  "e72b8ad0-f722-4c19-8d15-9b8f7a2d8ffc": {
-    "nombre": "mon",
-    "id": "e72b8ad0-f722-4c19-8d15-9b8f7a2d8ffc",
-    "ultima": 1779362597390,
-    "hablando": false
-  },
   "6d702672-92c8-499c-9b2b-8c4bb8eb8004": {
     "nombre": "Nuevo",
     "id": "6d702672-92c8-499c-9b2b-8c4bb8eb8004",
-    "ultima": 1779362626884,
+    "ultima": 1779362628132,
     "hablando": true
   }
 }
