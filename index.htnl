@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Walkie Talkie - PTT sin cortes</title>
+    <title>Walkie Talkie - PTT sin  cortes</title>
     <style>
         *{user-select:none;-webkit-tap-highlight-color:transparent}
         body{margin:0;min-height:100vh;background:linear-gradient(135deg,#0a0a0f,#1a1a2e);font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;padding:20px}
